@@ -1,6 +1,6 @@
-const ntlmAuth = require("../dynamics_api_node/auth.js").options;
-const spasAuth = require("./spasAuth.js").options;
 const httpntlm = require('httpntlm');
+const ntlmAuth = require("./ntlmAuth.js").options;
+const spasAuth = require("./spasAuth.js").options;
 const isHoliday = require('./holidays.js').isHoliday;
 
 const MEAL_DATE = daysAhead(1);
@@ -52,7 +52,7 @@ function summary(badgeID, response) {
 
 function submitMeal(response) {
 	return (resolve, reject) => {
-		let dateStr = MEAL_DATE.toISOString().slice(0,10);
+		let dateStr = MEAL_DATE.toISOString().slice(0,10)
 		httpntlm.post(
 			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
 				{cookies:cookie},
@@ -81,7 +81,7 @@ function setMealTime(response) {
 
 function setMealDate(response) {
 	return (resolve, reject) => {
-		let dateStr = MEAL_DATE.toISOString().slice(0,10);
+		let dateStr = MEAL_DATE.toISOString().slice(0,10)
 		httpntlm.get(
 			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
 				{cookies:cookie}),
