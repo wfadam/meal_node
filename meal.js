@@ -81,7 +81,7 @@ function setMealTime(response) {
 
 function setMealDate(response) {
 	return (resolve, reject) => {
-		let dateStr = MEAL_DATE.toISOString().slice(0,10)
+		let dateStr = MEAL_DATE.toISOString().slice(0,10);
 		httpntlm.get(
 			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
 				{cookies:cookie}),
