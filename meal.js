@@ -7,7 +7,7 @@ const MEAL_DATE = daysAhead(1);
 const MEAL_TIME = 'M1:午餐';//or 'M2:晚餐'
 
 if(isHoliday(MEAL_DATE)) {
-	console.log(`${MEAL_DATE.toISOString().slice(0,10)} is skipped`);
+	console.log(`${toDateString(MEAL_DATE)} is skipped`);
 	return;
 }
 
@@ -38,7 +38,7 @@ function summary(badgeID, response) {
 	let lines = response.body.split('\r\n');
 	for(let record of lines) {
 		if(record.includes(badgeID)) {
-			let row = [MEAL_DATE.toISOString().slice(0,10), spasAuth.txtBadgeID];
+			let row = [toDateString(MEAL_DATE), spasAuth.txtBadgeID];
 			let nextPos = 0;
 			let found = undefined;
 			while(found = record.substr(nextPos).match(/[^\u0000-\u007F]+/)) {
@@ -52,7 +52,7 @@ function summary(badgeID, response) {
 
 function submitMeal(response) {
 	return (resolve, reject) => {
-		let dateStr = MEAL_DATE.toISOString().slice(0,10)
+		let dateStr = toDateString(MEAL_DATE);
 		httpntlm.post(
 			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
 				{cookies:cookie},
@@ -81,7 +81,7 @@ function setMealTime(response) {
 
 function setMealDate(response) {
 	return (resolve, reject) => {
-		let dateStr = MEAL_DATE.toISOString().slice(0,10)
+		let dateStr = toDateString(MEAL_DATE);
 		httpntlm.get(
 			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
 				{cookies:cookie}),
@@ -141,10 +141,10 @@ const paramOfMealTime = {
 	__EVENTTARGET: 'cmbMealCode',
 	__EVENTARGUMENT: '',
 	__LASTFOCUS: '',
-	cmbTheDate: MEAL_DATE.toISOString().slice(0,10),
+	cmbTheDate: toDateString(MEAL_DATE),
 	cmbMealName: '',
 	cmbMealCode: MEAL_TIME,
-	cmbDateOfActualOrder: daysAhead(0).toISOString().slice(0,10),
+	cmbDateOfActualOrder: toDateString(daysAhead(0)),
 	cmbCodeOfActualOrder: 'M1:午餐',
 	txtQtyOfActualOrder: 0
 }
@@ -153,12 +153,16 @@ const paramOfMealSubmit = {
 	__EVENTTARGET: '',
 	__EVENTARGUMENT: '',
 	__LASTFOCUS: '',
-	cmbTheDate: MEAL_DATE.toISOString().slice(0,10),
+	cmbTheDate: toDateString(MEAL_DATE),
 	cmdSubmit: '本人订餐',
 	cmbMealName: 'F1:米饭',
 	cmbMealCode: MEAL_TIME,
-	cmbDateOfActualOrder: daysAhead(0).toISOString().slice(0,10),
+	cmbDateOfActualOrder: toDateString(daysAhead(0)),
 	cmbCodeOfActualOrder: 'M1:午餐',
 	txtQtyOfActualOrder: 0
+}
+
+function toDateString(theDate) {
+	return theDate.toISOString().slice(0,10);
 }
 
