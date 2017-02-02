@@ -6,33 +6,15 @@ const isHoliday = require('./holidays.js').isHoliday;
 const MEAL_DATE = daysAhead(1);
 const MEAL_TIME = 'M1:午餐';//or 'M2:晚餐'
 
-if(isHoliday(MEAL_DATE)) {
-	console.log(`${toDateString(MEAL_DATE)} is skipped`);
-	return;
+const commonFormData = {
+	__EVENTARGUMENT: '',
+	__LASTFOCUS: '',
+	cmbTheDate: toDateString(MEAL_DATE),
+	cmbMealCode: MEAL_TIME,
+	cmbDateOfActualOrder: toDateString(daysAhead(0)),
+	cmbCodeOfActualOrder: 'M1:午餐',
+	txtQtyOfActualOrder: 0
 }
-
-var cookie = undefined;
-
-new Promise(openSPAS())
-	.then((response) => {
-		return new Promise(loginSPAS(response));
-	})
-	.then((response) => {
-		cookie = response.cookies;
-		return new Promise(setMealDate(response));
-	})
-	.then((response) => {
-		return new Promise(setMealTime(response));
-	})
-	.then((response) => {
-		return new Promise(submitMeal(response));
-	})
-	.then((response) => {
-		summary(spasAuth.txtBadgeID, response)
-	})
-	.catch((err) => {
-		console.log(err);
-	});
 
 function summary(badgeID, response) {
 	let lines = response.body.split('\r\n');
@@ -50,69 +32,57 @@ function summary(badgeID, response) {
 	}
 }
 
-function submitMeal(response) {
+function sendData(method, params) {
 	return (resolve, reject) => {
-		let dateStr = toDateString(MEAL_DATE);
-		httpntlm.post(
-			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
-				{cookies:cookie},
-				{parameters: Object.assign(viewStats(response.body), paramOfMealSubmit)}),
-			function (err, res) {
-				if(err) reject(err);
-				resolve(res);
-			});
-	}
+		httpntlm[method](params, (err, res) => {
+			if(err) reject(err);
+			resolve(res);
+		});
+	};
 }
 
+function submitMeal(response) {
+	let paramOfMealSubmit = Object.assign({
+		__EVENTTARGET: '',
+		cmdSubmit: '本人订餐',
+		cmbMealName: 'F1:米饭',
+	}, commonFormData);
+
+	let dateStr = toDateString(MEAL_DATE);
+	return sendData('post', 
+		Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
+			{cookies:COOKIE},
+			{parameters: Object.assign(viewStats(response.body), paramOfMealSubmit)}));
+}
 
 function setMealTime(response) {
-	return (resolve, reject) => {
-		httpntlm.post(
-			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx`},
-				ntlmAuth,
-				{cookies:cookie},
-				{parameters: Object.assign(viewStats(response.body), paramOfMealTime)}),
-			function (err, res) {
-				if(err) reject(err);
-				resolve(res);
-			});
-	}
+	let paramOfMealTime = Object.assign({
+		__EVENTTARGET: 'cmbMealCode',
+		cmbMealName: '',
+	}, commonFormData);
+
+	return sendData('post', 
+		Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx`}, ntlmAuth,
+			{cookies:COOKIE},
+			{parameters: Object.assign(viewStats(response.body), paramOfMealTime)}));
 }
 
 function setMealDate(response) {
-	return (resolve, reject) => {
-		let dateStr = toDateString(MEAL_DATE);
-		httpntlm.get(
-			Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
-				{cookies:cookie}),
-			function (err, res){
-				if(err) reject(err);
-				resolve(res);
-			});
-	};
+	let dateStr = toDateString(MEAL_DATE);
+	return sendData('get', 
+		Object.assign({url: `http://cvppasip02/SPAS/Meal/Meal.aspx?d=${dateStr}`}, ntlmAuth,
+			{cookies:COOKIE}));
 }
 
 function loginSPAS(response) {
-	return (resolve, reject) => {
-		httpntlm.post(
-			Object.assign({url: 'http://cvppasip02/SPAS/FormLeft.aspx'}, ntlmAuth,
-				{parameters: Object.assign(viewStats(response.body), spasAuth)}),
-			function (err, res){
-				if(err) reject(err);
-				resolve(res);
-			});
-	};
+	return sendData('post', 
+		Object.assign({url: 'http://cvppasip02/SPAS/FormLeft.aspx'}, ntlmAuth,
+			{parameters: Object.assign(viewStats(response.body), spasAuth)}));
 }
 
 function openSPAS() {
-	return (resolve, reject) => {
-		httpntlm.get(
-			Object.assign({url: 'http://cvppasip02/SPAS/FormLeft.aspx'}, ntlmAuth),
-			function (err, res){
-				if(err) reject(err);
-				resolve(res);
-			});
-	};
+	return sendData('get',
+		Object.assign({url: 'http://cvppasip02/SPAS/FormLeft.aspx'}, ntlmAuth));
 }
 
 function viewStats(html) {
@@ -137,32 +107,35 @@ function daysAhead(numOfDay) {
 	return date;
 }
 
-const paramOfMealTime = {
-	__EVENTTARGET: 'cmbMealCode',
-	__EVENTARGUMENT: '',
-	__LASTFOCUS: '',
-	cmbTheDate: toDateString(MEAL_DATE),
-	cmbMealName: '',
-	cmbMealCode: MEAL_TIME,
-	cmbDateOfActualOrder: toDateString(daysAhead(0)),
-	cmbCodeOfActualOrder: 'M1:午餐',
-	txtQtyOfActualOrder: 0
-}
-
-const paramOfMealSubmit = {
-	__EVENTTARGET: '',
-	__EVENTARGUMENT: '',
-	__LASTFOCUS: '',
-	cmbTheDate: toDateString(MEAL_DATE),
-	cmdSubmit: '本人订餐',
-	cmbMealName: 'F1:米饭',
-	cmbMealCode: MEAL_TIME,
-	cmbDateOfActualOrder: toDateString(daysAhead(0)),
-	cmbCodeOfActualOrder: 'M1:午餐',
-	txtQtyOfActualOrder: 0
-}
-
 function toDateString(theDate) {
 	return theDate.toISOString().slice(0,10);
 }
+
+if(isHoliday(MEAL_DATE)) {
+	console.log(`${toDateString(MEAL_DATE)} is skipped`);
+	return;
+}
+
+var COOKIE = undefined;
+
+new Promise(openSPAS())
+	.then((response) => {
+		return new Promise(loginSPAS(response));
+	})
+	.then((response) => {
+		COOKIE = response.cookies;
+		return new Promise(setMealDate(response));
+	})
+	.then((response) => {
+		return new Promise(setMealTime(response));
+	})
+	.then((response) => {
+		return new Promise(submitMeal(response));
+	})
+	.then((response) => {
+		summary(spasAuth.txtBadgeID, response);
+	})
+	.catch((err) => {
+		console.log(err);
+	});
 
