@@ -37,7 +37,7 @@ async function bookMeal(msec = Date.now()) {
     const [page] = await browser.pages();
     await page.goto('http://cvppasip02/SPAS');
     const frames = await page.frames();
-    await doNavi.call(frames[2], 'type', '#txtPassword', Buffer.from('Ly9TYW5kaXNrYTh3NGRi', 'base64').toString());
+    await doNavi.call(frames[2], 'type', '#txtPassword', 'password');
     await doNavi.call(frames[2], 'click', '#cmdLogin', true);
     await doNavi.call(frames[3], 'click', '#linkMeal');
     const badgeId = await frames[2].$eval('#lblUserInfo', e => e.title);
