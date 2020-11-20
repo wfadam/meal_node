@@ -37,14 +37,16 @@ async function bookMeal(msec = Date.now()) {
     const [page] = await browser.pages();
     await page.goto('http://cvppasip02/SPAS');
     const frames = await page.frames();
-    await doNavi.call(frames[2], 'type', '#txtPassword', 'password');
+    await doNavi.call(frames[2], 'type', '#txtPassword', Buffer.from('V2RjLy9hOHc0ZGIK', 'base64').toString());
     await doNavi.call(frames[2], 'click', '#cmdLogin', true);
     await doNavi.call(frames[3], 'click', '#linkMeal');
     const badgeId = await frames[2].$eval('#lblUserInfo', e => e.title);
     await doNavi.call(frames[3], 'type', '#cmbTheDate', dstr(msec), true);
     await submitMeal.call(frames[3], 'M1:午餐'); await checkResult.call(frames[3], badgeId, 1);
     await submitMeal.call(frames[3], 'M2:晚餐'); await checkResult.call(frames[3], badgeId, 2);
+    console.log('Query tomorrow meal')
     await displayResult.call(frames[3], badgeId);
+    console.log('Query today meal')
     await doNavi.call(frames[3], 'type', '#cmbTheDate', dstr(Date.now()), true);
     await displayResult.call(frames[3], badgeId);
     browser.close();
@@ -58,8 +60,8 @@ async function batchBook() {
     } catch(e) {
         console.error(e);
     }
-    setTimeout(batchBook, 4 * HOUR);
-    console.log(`The next round is scheduled at ${new Date(Date.now() + 4 * HOUR).toLocaleString()}`);
+    setTimeout(batchBook, 6 * HOUR);
+    console.log(`The next round is scheduled at ${new Date(Date.now() + 6 * HOUR).toLocaleString()}`);
 }
 
 if(require.main === module) {
